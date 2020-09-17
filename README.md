@@ -118,14 +118,67 @@ gunicorn --threads=4 \
 ## /api/get/user/`uid`
 - HTTP Method: GET
 - About: returns a JSON with user (`uid`) and some info
+- Expected JSON content:
+```json
+{
+  "user": {
+    "cpf": "98765432100",
+    "created": "%Y-%m-%d %H:%M:%S.%f",
+    "email": "employee@company.com",
+    "full_name": "Employee Full Name",
+    "id": 1
+  }
+}
+```
 
 ## /api/list/punches/user/`uid`
 - HTTP Method: GET
 - About: returns a JSON with a list of registered punches for user (`uid`)
+- Expected JSON content (`total_time` in seconds):
+```json
+{
+  "total_time": "28800",
+  "punches": [
+    {
+      "created": "%Y-%m-%d %H:%M:%S.%f",
+      "id": 1,
+      "punch_type": "in",
+      "user_id": 1
+    },
+    {
+      "created": "%Y-%m-%d %H:%M:%S.%f",
+      "id": 2,
+      "punch_type": "out",
+      "user_id": 1
+    }
+  ]
+}
+```
 
 ## /api/list/users
 - HTTP Method: GET
 - About: returns a JSON with a list of registered users and their data
+- Expected JSON content:
+```json
+{
+  "users": [
+    {
+      "cpf": "98765432100",
+      "created": "%Y-%m-%d %H:%M:%S.%f",
+      "email": "jesse.pinkman@bluecrystalz.org",
+      "full_name": "Jesse Pinkman",
+      "id": 1
+    },
+    {
+      "cpf": "12345678900",
+      "created": "%Y-%m-%d %H:%M:%S.%f",
+      "email": "heisenberg@bluecrystalz.org",
+      "full_name": "Walter White",
+      "id": 2
+    }
+  ]
+}
+```
 
 ## /api/new/punch
 - HTTP Method: POST
