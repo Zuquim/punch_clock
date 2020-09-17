@@ -1,4 +1,5 @@
 from re import match
+from time import sleep
 
 from tests import *
 
@@ -92,21 +93,35 @@ def test_api_create_punch_fail(app, client):
         == r.json["message"]
     )
 
+    # Wrong punch_type
+    r = post(
+        client,
+        path="/api/new/punch",
+        json=dict(
+            user_id=1,
+            punch_type="wrong",
+        ),
+    )
+    assert 400 == r.status_code
+    assert (
+        "JSON must contain the following attributes: user_id; punch_type(in/out); | Missing attribute: 'punch_type must be either in or out'"
+        == r.json["message"]
+    )
+
 
 def test_get_users_punches(app, client):
     """Testing /api/get/punches/user path."""
 
     api_dummy_user(app, client, "32165498700", "Jesse Pinkman", "jesse@crystalz.org")
     api_dummy_punch(app, client, 1, "in")
+    sleep(2)
+    api_dummy_punch(app, client, 1, "out")
+    api_dummy_punch(app, client, 1, "in")
+    sleep(3)
     api_dummy_punch(app, client, 1, "out")
     r = get(client, "/api/get/punches/user/1")
     assert 200 == r.status_code
-    exp = {
-        "user": {
-            "user_id": 1,
-            "punch_type": "in",
-        }
-    }
+    assert 5 == r.json["total_time"]
     assert "1" == r.json["punches"][0]["id"]
     assert "1" == r.json["punches"][0]["user_id"]
     assert "in" == r.json["punches"][0]["punch_type"]

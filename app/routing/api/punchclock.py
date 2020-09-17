@@ -19,6 +19,25 @@ def success_reply_dict(action: str, request: request, punch_obj: PunchClock) -> 
     }
 
 
+def calculate_total_worked_time(punches) -> int:
+    in_ = ""
+    seconds = 0
+    for punch in punches:
+        if punch["punch_type"] == "in":
+            in_ = dt.strptime(punch["created"], "%Y-%m-%d %H:%M:%S.%f")
+            log.debug(f"in:  {in_}")
+        elif in_ and punch["punch_type"] == "out":
+            out_ = dt.strptime(punch["created"], "%Y-%m-%d %H:%M:%S.%f")
+            log.debug(f"out: {out_}")
+            log.debug(f"WT:  {out_ - in_}")
+            seconds += (out_ - in_).seconds
+            in_ = ""
+        elif not in_:
+            log.warning(f"Leaving before coming in...")
+    log.debug(f"TWT: {seconds}s")
+    return seconds
+
+
 @api_bp.route("/api/get/punches/user/<int:uid>", methods=["GET"])
 def list_user_punches(uid):
     """List user's punches details."""
@@ -34,9 +53,14 @@ def list_user_punches(uid):
     user_punches = [
         row2dict(pc) for pc in PunchClock.query.filter(PunchClock.user_id == uid).all()
     ]
-    reply = success_reply_dict("select", request, PunchClock.query.filter(PunchClock.user_id == uid).first())
+
+    reply = success_reply_dict(
+        "select", request, PunchClock.query.filter(PunchClock.user_id == uid).first()
+    )
     log.info(reply["message"])
-    return jsonify(punches=user_punches)
+    return jsonify(
+        punches=user_punches, total_time=calculate_total_worked_time(user_punches)
+    )
 
 
 @api_bp.route("/api/new/punch", methods=["POST"])
@@ -47,7 +71,7 @@ def new_punch():
         user_id = request.json["user_id"]
         punch_type = request.json["punch_type"].lower()
         if punch_type != "in" and punch_type != "out":
-            raise KeyError("'punch_type' must be either 'in' or 'out'")
+            raise KeyError("punch_type must be either in or out")
     except KeyError as e:
         error_msg = (
             "JSON must contain the following attributes: user_id; punch_type(in/out);"
