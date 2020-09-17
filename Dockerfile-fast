@@ -1,0 +1,8 @@
+FROM punch-clock:latest
+WORKDIR /app
+COPY . ./
+ENV ENV production
+ENV FLASK_APP punch_clock.py
+ENV FLASK_ENV $ENV
+EXPOSE 80
+CMD ["gunicorn", "--pid=/var/run/punch_clock.pid", "--workers=2", "--threads=4", "--bind=0.0.0.0:80", "--log-level=info", "--access-logfile=/var/log/api/access.log", "--error-logfile=/var/log/api/error.log", "punch_clock:app"]
