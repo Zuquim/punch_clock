@@ -45,7 +45,9 @@ def new_punch():
 
     try:
         user_id = request.json["user_id"]
-        punch_type = request.json["punch_type"]
+        punch_type = request.json["punch_type"].lower()
+        if punch_type != "in" and punch_type != "out":
+            raise KeyError("'punch_type' must be either 'in' or 'out'")
     except KeyError as e:
         error_msg = (
             "JSON must contain the following attributes: user_id; punch_type(in/out);"
